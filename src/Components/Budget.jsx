@@ -24,7 +24,7 @@ function Budget () {
   const [actuals, setActuals] = useState({expense: 0, income: 0})
 
   const refreshBudgets = () => {
-    axios.get('http://localhost:6789/api/budget?group=true')
+    axios.get('/api/budget?group=true')
       .then(res => {
         const {expenses, incomes} = res.data
 
@@ -35,7 +35,7 @@ function Budget () {
   }
 
   const refreshSummaries = () => {
-    axios.get('http://localhost:6789/api/summary')
+    axios.get('/api/summary')
       .then(res => {
         const { expensePlanned, incomePlanned, expenseActual, incomeActual } = res.data
 
@@ -60,7 +60,7 @@ function Budget () {
   const createBudget = () => {
     let body = {...newBudget}
 
-    axios.post('http://localhost:6789/api/budget', body)
+    axios.post('/api/budget', body)
       .then(res => {
         setNewBudget({name: '', amount: 0, type: 'default'})
 

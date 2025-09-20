@@ -33,7 +33,7 @@ function Transactions () {
   const [ budgets, setBudget ] = useState({expenses: [], incomes: []})
 
   const refreshTransactions = () => {
-    axios.get('http://localhost:6789/api/transaction')
+    axios.get('/api/transaction')
       .then(res => {
         const { expenses, incomes } = res.data
 
@@ -46,7 +46,7 @@ function Transactions () {
   }
 
   const refreshBudgets = () => {
-    axios.get('http://localhost:6789/api/budget?group=type')
+    axios.get('/api/budget?group=type')
       .then((res) => {
         setBudget(res.data)
       })
@@ -67,7 +67,7 @@ function Transactions () {
   const createNewTransaction = () => {
     const body = {...newTransaction}
 
-    axios.post('http://localhost:6789/api/transaction', body)
+    axios.post('/api/transaction', body)
       .then(res => {
         console.log('worked')
 

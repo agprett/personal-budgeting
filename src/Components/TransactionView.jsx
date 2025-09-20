@@ -59,7 +59,7 @@ function ExpenseView({ transaction, budgets, refreshTransactions, refreshBudgets
   }, [editDate])
 
   const updateTransaction = (updatedTransaction) => {
-    axios.put('http://localhost:6789/api/transaction', {transaction_id: transaction.transaction_id, ...updatedTransaction})
+    axios.put('/api/transaction', {transaction_id: transaction.transaction_id, ...updatedTransaction})
       .then(res => {
         console.log(res.data)
 

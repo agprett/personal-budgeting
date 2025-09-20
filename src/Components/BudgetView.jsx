@@ -33,7 +33,7 @@ function BudgetView({ budget, refreshBudgets, refreshSummaries }) {
   }, [editAmount])
 
   const updateBudget = (updatedBudget) => {
-    axios.put('http://localhost:6789/api/budget', updatedBudget)
+    axios.put('/api/budget', updatedBudget)
       .then(res => {
         console.log(res.data)
 
