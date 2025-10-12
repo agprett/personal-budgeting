@@ -1,5 +1,6 @@
 import axios from "axios"
 import { useEffect, useState } from "react"
+
 import TransactionView from "./TransactionView.jsx"
 
 const today = new Date()
@@ -69,8 +70,6 @@ function Transactions () {
 
     axios.post('/api/transaction', body)
       .then(res => {
-        console.log('worked')
-
         refreshTransactions()
         refreshBudgets()
       })

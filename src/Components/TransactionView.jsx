@@ -31,7 +31,6 @@ function ExpenseView({ transaction, budgets, refreshTransactions, refreshBudgets
   const [budget, setBudget] = useState(transaction.Budget.budget_id || 'default')
 
 
-
   useEffect(() => {
     if (editName && nameRef.current) {
       setTimeout(() => {
@@ -61,8 +60,6 @@ function ExpenseView({ transaction, budgets, refreshTransactions, refreshBudgets
   const updateTransaction = (updatedTransaction) => {
     axios.put('/api/transaction', {transaction_id: transaction.transaction_id, ...updatedTransaction})
       .then(res => {
-        console.log(res.data)
-
         refreshTransactions()
         refreshBudgets()
       })
@@ -72,10 +69,8 @@ function ExpenseView({ transaction, budgets, refreshTransactions, refreshBudgets
   }
 
   const deleteTransaction = () => {
-    axios.delete(`http://localhost:6789/api/transaction/${transaction.transaction_id}`)
+    axios.delete(`/api/transaction/${transaction.transaction_id}`)
       .then(res => {
-        console.log(res.data)
-
         refreshTransactions()
         refreshBudgets()
       })
@@ -114,7 +109,7 @@ function ExpenseView({ transaction, budgets, refreshTransactions, refreshBudgets
               }}
               onBlur={(evt) => {
                 setEditName(false)
-                updateTransaction({name: evt.target.value})
+                updateTransaction({name: evt.target})
               }}
             />
           ) : (
@@ -157,16 +152,14 @@ function ExpenseView({ transaction, budgets, refreshTransactions, refreshBudgets
               value={date}
               ref={dateRef}
               type="date"
-              onChange={evt => {
-                setDate(evt.target.value)
-                updateTransaction({date: evt.target.value})
-                setEditDate(false)
+              onChange={evt => setDate(evt.target.value)}
+              onKeyDown={evt => {
+                if(evt.key === 'Enter') {
+                  updateTransaction({date: evt.target.value})
+                  setEditDate(false)
+                }
               }}
-              onBlur={(evt) => {
-                setDate(evt.target.value)
-                updateTransaction({date: evt.target.value})
-                setEditDate(false)
-              }}
+              onBlur={() => setEditDate(false)}
             />
           ) : (
             <p onClick={() => setEditDate(true)}>{formatDate(date)}</p>

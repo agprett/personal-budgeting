@@ -37,8 +37,6 @@ const transactionFunctions = {
   createTransaction: async (req, res) => {
     let data = req.body
 
-    data = {...data,  budget_id: +data.budget_id}
-
     const transaction = await Transaction.create(data)
 
     res.status(200).send('Transaction added')

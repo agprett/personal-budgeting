@@ -21,6 +21,12 @@ const {getBudgets, createBudget, updateBudget, deleteBudget, getSummary} = budge
 import transactionFunctions from './controllers/transactionController.js'
 const {getTransactions, createTransaction, updateTransaction, deleteTransaction} = transactionFunctions
 
+import savingFunctions from './controllers/savingController.js'
+const {getSavings, createSaving, updateSaving, deleteSaving, getSavingsSummary} = savingFunctions
+
+import savingTransactionFunctions from './controllers/savingTransactionController.js'
+const {getSavingTransactions, createSavingTransaction, updateSavingTransaction, deleteSavingTransaction} = savingTransactionFunctions
+
 
 app.get('/api/budget', getBudgets)
 app.post('/api/budget', createBudget)
@@ -32,7 +38,18 @@ app.post('/api/transaction', createTransaction)
 app.put('/api/transaction', updateTransaction)
 app.delete('/api/transaction/:id', deleteTransaction)
 
+app.get('/api/saving', getSavings)
+app.post('/api/saving', createSaving)
+app.put('/api/saving', updateSaving)
+app.delete('/api/saving/:id', deleteSaving)
+
+app.get('/api/saving/transaction', getSavingTransactions)
+app.post('/api/saving/transaction', createSavingTransaction)
+app.put('/api/saving/transaction', updateSavingTransaction)
+app.delete('/api/saving/transaction/:id', deleteSavingTransaction)
+
 app.get('/api/summary', getSummary)
+app.get('/api/saving/summary', getSavingsSummary)
 
 
 app.use(express.static(__dirname + '/../dist'))

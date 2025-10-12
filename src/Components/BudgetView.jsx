@@ -45,17 +45,17 @@ function BudgetView({ budget, refreshBudgets, refreshSummaries }) {
       })
     }
     
-    const deleteBudget = (id) => {
-      axios.delete(`http://localhost:6789/api/budget/${id}`)
-      .then(res => {
-        console.log(res.data)
-        
-        refreshBudgets()
-        refreshSummaries()
-      })
-      .catch(err => {
-        console.log(err)
-      })
+  const deleteBudget = (id) => {
+    axios.delete(`/api/budget/${id}`)
+    .then(res => {
+      console.log(res.data)
+      
+      refreshBudgets()
+      refreshSummaries()
+    })
+    .catch(err => {
+      console.log(err)
+    })
   }
 
   return (
@@ -67,9 +67,10 @@ function BudgetView({ budget, refreshBudgets, refreshSummaries }) {
             ref={nameRef}
             onChange={evt => setName(evt.target.value)}
             onKeyDown={(evt) => {
-              if(evt.key ==='Enter')
+            if(evt.key ==='Enter'){
                 setEditName(false)
-              updateBudget({...budget, name: evt.target.value})
+                updateBudget({...budget, name: evt.target.value})
+              }
             }}
             onBlur={(evt) => {
               setEditName(false)
@@ -89,9 +90,10 @@ function BudgetView({ budget, refreshBudgets, refreshSummaries }) {
           ref={amountRef}
           onChange={evt => setAmount(evt.target.value)}
           onKeyDown={(evt) => {
-            if(evt.key ==='Enter')
+            if(evt.key ==='Enter') {
               setEditAmount(false)
-            updateBudget({...budget, amount: evt.target.value})
+              updateBudget({...budget, amount: evt.target.value})
+            }
           }}
           onBlur={(evt) => {
             setEditAmount(false)
@@ -106,33 +108,6 @@ function BudgetView({ budget, refreshBudgets, refreshSummaries }) {
       <td className="planned-td">$ {actual}</td>
 
       <td className="actual-td">$ {amount - actual}</td>
-
-      {/* <td>
-        {editType ? (
-          <select
-          value={type}
-          ref={typeRef}
-          autoFocus
-          onLoad={() => typeRef.current.focus()}
-          onChange={evt => {
-            setType(evt.target.value)
-            setEditType(false)
-            updateBudget({...budget, type: evt.target.value})
-          }}
-          onBlur={() => {
-            setEditType(false)
-          }}
-          >
-            <option value='default' disabled>Select Option</option>
-            <option value='expense'>Expense</option>
-            <option value='income'>Income</option>
-          </select>
-        ) : (
-          <h4 onClick={() => {
-            setEditType(true)
-          }}>{type}</h4>
-        )}
-      </td> */}
 
       <td className="delete-td">
         <button onClick={() => deleteBudget(budget.budget_id)}>Delete</button>

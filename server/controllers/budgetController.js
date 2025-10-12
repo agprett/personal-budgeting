@@ -12,6 +12,7 @@ const budgetFunctions = {
       let response = await db.query(`
         SELECT budgets.budget_id, budgets.name, budgets.amount, budgets.type, SUM(transactions.amount) actual FROM budgets
         LEFT JOIN transactions ON transactions.budget_id = budgets.budget_id
+        AND transactions.date >= DATE_TRUNC('month', CURRENT_DATE)
         GROUP BY budgets.budget_id
         ORDER BY budgets.name;
       `)

@@ -7,6 +7,7 @@ function Nav () {
       <NavLink to={'/'}>Home</NavLink>
       <NavLink to={'/budget'}>Budget</NavLink>
       <NavLink to={'/transactions'}>Transactions</NavLink>
+      <NavLink to={'/savings'}>Savings</NavLink>
     </nav>
   )
 }
