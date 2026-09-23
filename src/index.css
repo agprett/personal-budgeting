@@ -1,242 +1,59 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap');
+@import 'tailwindcss';
+
+@theme {
+  --font-sans: 'Inter', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+
+  --color-navy-950: #020812;
+  --color-navy-900: #050d1a;
+  --color-navy-800: #0a1628;
+  --color-navy-700: #0f2040;
+  --color-navy-600: #162d55;
+  --color-navy-500: #1d3a6a;
+  --color-navy-400: #2a5298;
+  --color-navy-300: #3b82f6;
+  --color-navy-200: #60a5fa;
+  --color-navy-100: #93c5fd;
+
+  --color-accent: #38bdf8;
+  --color-accent-dim: #0ea5e9;
+  --color-success: #10b981;
+  --color-warning: #f59e0b;
+  --color-danger: #ef4444;
+}
+
+* {
+  box-sizing: border-box;
+}
+
 body {
-  display: flex;
-  flex-direction: column;
-  padding-left: 200px;
-  padding-bottom: 50px;
-  background-color: #001233;
+  font-family: var(--font-sans);
+  background-color: #050d1a;
+  color: #e2e8f0;
+  -webkit-font-smoothing: antialiased;
 }
 
-p {
-  margin: none;
+::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
 }
-
-nav {
-  height: 100vh;
-  width: 190px;
-  position: fixed;
-  left: 0;
-  top: 0;
-  display: flex;
-  flex-direction: column;
-  justify-content: start;
-  gap: 10px;
-  padding-top: 5%;
-  background-color: #0353A4;
+::-webkit-scrollbar-track {
+  background: transparent;
 }
-
-a {
-  padding: 15px 25px;
-  margin-left: 15px;
-  text-decoration: none;
-  color: white;
-}
-
-a.active {
-  color: #001233;
-}
-
-h3 {
-  font-size: x-large;
-  color: #0466C8;
-}
-
-.split-form-wrapper {
-  width: 100%;
-  display: flex;
-  align-items: center;
-  gap: 50px;
-}
-
-.form-wrapper {
-  width: 800px;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-evenly;
-  align-items: start;
-  gap: 35px;
-  padding: 30px 20px;
-  margin-bottom: 50px;
-  border-radius: 5px;
-  background-color: #002855;
-}
-
-.new-savings {
-  width: 525px;
-}
-
-form {
-  width: 100%;
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  grid-gap: 30px 15px;
-  padding-right: 10px;
-}
-
-.form-inputs {
-  width: 250px;
-  display: flex;
-  gap: 4px;
-}
-
-form label {
-  color: white;
-}
-
-input, select {
-  width: 100%;
-  background-color: inherit;
-  border: none;
-  border-bottom: 2px solid #0353A4;
-  color: white;
-}
-
-input[type='date'] {
-  color-scheme: dark;
-}
-
-optgroup, option {
-  border: none;
-  background-color: #001845;
-}
-
-option:disabled {
-  color: #0466C8;
-  background-color: #33415C;
-}
-
-h4 {
-  margin: 0;
-  font-size: larger;
-  color: #0466C8;
-}
-
-.form-wrapper button {
-  padding: 10px 30px;
-  border: none;
-  border-radius: 5px;
-  color: white;
-  background-color: #023E7D;
-  cursor: pointer;
-}
-
-.form-wrapper button:hover {
-  color: #979DAC;
-}
-
-.split-tables {
-  display: flex;
-  justify-content: space-evenly;
-}
-
-.split-table-wrapper {
-  width: 47.5%;
-}
-
-table {
-  width: 100%;
-}
-
-caption {
-  font-size: x-large;
-  color: #0466C8;
-  margin-bottom: 4px;
-}
-
-tbody {
-  border-top: 2px solid #979DACFF;
-}
-
-tr {
-  height: 50px;
-}
-tr:hover {
-  background-color: #979DAC;
-}
-tr:hover td {
-  color: white;
-}
-
-.summary-table-row:hover {
-  background-color: inherit;
-}
-
-.summary-table-row:hover td {
-  color: #979DAC;
-}
-
-/* tr:nth-child(even) {
-  background-color: #D6EEEE;
-} */
-
-.no-data-row {
-  width: 100%;
-}
-
-td {
-  vertical-align: middle;
-  padding: 0 7px;
-  border: none;
-  color: #979DAC;
-  border-bottom: 1px solid #979DAC55;
-}
-
-.name-td {
-  width: 40%;
-  font-weight: 700;
-}
-
-.savings-name-td {
-  width: 50%
-}
-
-.account-td {
-  width: 40%;
-}
-
-.budget-name {
-  margin: 0;
-  font-size: large;
-  color: #0466C8;
-}
-
-.amount-td{
-  width: 17%;
-} 
-
-.planned-td, .actual-td, .diff-td {
-  width: 22%;
-}
-
-.savings-amount-td, .change-td {
-  width: 25%;
-}
-
-.savings-date-td, .savings-type-td {
-  width: 17.5%
-}
-
-.date-td {
-  width: 17%;
-}
-
-.category-td {
-  width: 21%;
-}
-
-.delete-td {
-  width: 15px;
-}
-
-.delete-td button {
-  width: fit-content;
-  margin: auto;
-  text-align: center;
-}
-
-td button {
-  padding: 4px 8px;
-  border: none;
+::-webkit-scrollbar-thumb {
+  background: #162d55;
   border-radius: 2px;
-  color: white;
-  background-color: darkred;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #2a5298;
+}
+
+.mono {
+  font-family: var(--font-mono);
+}
+
+input, select, textarea {
+  font-family: var(--font-sans);
 }

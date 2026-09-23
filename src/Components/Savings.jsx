@@ -1,8 +1,7 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
 
-import SavingsView from "./SavingsView.jsx";
-import SavingsTransactionView from "./SavingsTransactionView.jsx";
+import GoalCard from "./GoalCard.jsx";
 
 const today = new Date()
 const todayFormatted = today.toISOString().split('T')[0]
@@ -16,6 +15,7 @@ const formatDate = (date) => {
 }
 
 const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+const colors = ['#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#ef4444', '#38bdf8', '#f97316', '#ec4899']
 
 const getMonth = () => {
   let date = new Date()
@@ -29,17 +29,19 @@ const getMonth = () => {
 
 function Savings () {
   const [savings, setSavings] = useState([])
-  const [savingsTransactions, setSavingsTransactins] = useState([])
-  const [savingsSummary, setSavingsSummary] = useState(0)
-  const [transactionSummary, setTransactionsSummary] = useState(0)
-  const [newSavings, setNewSavings] = useState({name: '', amount: 0})
-  const [newSavingsTransaction, setNewSavingsTransaction] = useState({saving_id: 'default', amount: 0, type: 'default', date: todayFormatted})
+  const [totalSaved, setTotalSaved] = useState(0)
+  const [totalTarget, setTotalTarget] = useState(0)
+  const [newSavings, setNewSavings] = useState({name: '', target: '', current: '', deadline: ''})
 
   const refreshSavings = () => {
-    ('fired savings')
+    // ('fired savings')
     axios.get('/api/saving')
       .then(res => {
-          setSavings(res.data)
+          if(res.data[0]) {
+            setSavings(res.data)
+          } else {
+            setSavings([])
+          }
         })
         .catch(err => {
           console.log(err)
@@ -47,21 +49,22 @@ function Savings () {
   }
 
   const refreshTransactions = () => {
-    ('fired transactions')
-    axios.get('/api/saving/transaction')
-      .then(res => {
-        setSavingsTransactins(res.data)
-      })
-      .catch(err => {
-        console.log(err)
-      })
-
     axios.get('/api/saving/summary')
       .then(res => {
-        const {savingsTotal, savingsTransactionsTotal} = res.data
+        const {savingsTarget, savingsTotal} = res.data
 
-        setSavingsSummary(savingsTotal)
-        setTransactionsSummary(savingsTransactionsTotal)
+        if(savingsTarget) {
+          setTotalTarget(savingsTarget)
+        } else {
+          setTotalTarget(0)
+        }
+
+        if(savingsTotal) {
+          setTotalSaved(savingsTotal)
+        } else {
+          setTotalSaved(0)
+        }
+
       })
   }
 
@@ -69,38 +72,46 @@ function Savings () {
     refreshSavings()
   }, [])
 
-  useEffect(() => {
-    refreshTransactions()
-  }, [])
 
   useEffect(() => {
     axios.get('/api/saving/summary')
       .then(res => {
-        const {savingsTotal, savingsTransactionsTotal} = res.data
+        const {savingsTarget, savingsTotal, savingsTransactionsTotal} = res.data
 
-        setSavingsSummary(savingsTotal)
-        setTransactionsSummary(savingsTransactionsTotal)
+        if(savingsTarget) {
+          setTotalTarget(savingsTarget)
+        } else {
+          setTotalTarget(0)
+        }
+
+        if(savingsTotal) {
+          setTotalSaved(savingsTotal)
+        } else {
+          setTotalSaved(0)
+        }
+
       })
   }, [])
 
 
-  const createNewSavings = () => {
+  const createNewSavings = (e) => {
+    e.preventDefault()
     const body = {...newSavings}
 
     axios.post('/api/saving', body)
       .then(res => {
         refreshSavings()
         refreshTransactions()
+
+        setNewSavings({name: '', target: '', current: '', deadline: ''})
       })
       .catch(err => {
         console.log(err)
       })
   }
 
-  const createSavingsTransaction = () => {
-    const body = {...newSavingsTransaction}
-
-    axios.post('/api/saving/transaction', body)
+  const updateSaving = (updatedSaving) => {
+    axios.put('/api/saving', updatedSaving)
       .then(res => {
         refreshSavings()
         refreshTransactions()
@@ -110,164 +121,121 @@ function Savings () {
       })
   }
 
+  const deleteSaving = (id) => {
+    axios.delete(`/api/saving/${id}`)
+      .then(res => {
+        refreshSavings()
+        refreshTransactions()
+      })
+      .catch(err => {
+        console.log(err)
+      })
+  }
 
-  const accountSelects = savings.map((account) => {
+  const goalCards = savings.map((saving, i) => {
+    const color = colors[i % (colors.length - 1)]
+
     return (
-      <option key={account.saving_id} value={account.saving_id}>{account.name}</option>
+      <GoalCard key={saving.saving_id} saving={saving} color={color} updateSaving={updateSaving} deleteSaving={deleteSaving}/>
     )
   })
 
-  const savingsView = savings.map(saving => {
-    return (
-      <SavingsView key={saving.saving_id} saving={saving} refreshSavings={refreshSavings} refreshTransactions={refreshTransactions}/>
-    )
-  })
-
-  const savingTransactionsView = savingsTransactions.map(transaction => {
-    return (
-      <SavingsTransactionView key={transaction.saving_transaction_id} transaction={transaction} accounts={savings} refreshSavings={refreshSavings} refreshTransactions={refreshTransactions}/>
-    )
-  })
 
   return (
-    <div>
-      
-      <h3>Savings - {getMonth()}</h3>
-      
-      <div className="split-form-wrapper">
-
-        <div className="form-wrapper new-savings">
-          <h4>New Savings</h4>
-
-          <form>
-            <div className="form-inputs">
-              <label htmlFor="name">Name:</label>
-              <input id="name" value={newSavings.name} onChange={(evt) => setNewSavings({...newSavings, name: evt.target.value})} placeholder="Name"/>
-            </div>
-
-            <div className="form-inputs">
-              <label htmlFor="amount">Amount:</label>
-              <input id="amount" value={newSavings.amount} onChange={(evt) => setNewSavings({...newSavings, amount: evt.target.value})} placeholder="Amount" type="number"/>
-            </div>
-
-          </form>
-
-          <button onClick={(e) => {
-            e.preventDefault()
-            createNewSavings()
-          }}>Add</button>
-
-        </div>
-
-        <div className="form-wrapper new-savings-transaction-form">
-          <h4>New Savings Transaction</h4>
-
-          <form>
-            <div className="form-inputs">
-              <label htmlFor="account">Account:</label>
-              <select
-                id="account"
-                value={newSavingsTransaction.saving_id}
-                onChange={evt => setNewSavingsTransaction({...newSavingsTransaction, saving_id: evt.target.value})}
-              >
-                <option value='default' disabled>Select Account</option>
-                {accountSelects}
-              </select>
-            </div>
-
-            <div className="form-inputs">
-              <label htmlFor="amount">Amount:</label>
-              <input id="amount" value={newSavingsTransaction.amount} onChange={(evt) => setNewSavingsTransaction({...newSavingsTransaction, amount: evt.target.value})} placeholder="Amount" type="number"/>
-            </div>
-
-            <div className="form-inputs">
-              <label htmlFor="type">Type:</label>
-              <select
-                id="type"
-                value={newSavingsTransaction.type}
-                onChange={evt => setNewSavingsTransaction({...newSavingsTransaction, type: evt.target.value})}
-              >
-                <option value='default' disabled>Select Type</option>
-                <option value='Deposit'>Deposit</option>
-                <option value='Withdrawl'>Withdrawl</option>
-              </select>
-            </div>
-
-            <div className="form-inputs">
-              <label htmlFor="date">Date:</label>
-              <input
-                id="date"
-                placeholder="Date"
-                type="date"
-                value={newSavingsTransaction.date}
-                onChange={(evt) =>
-                  setNewSavingsTransaction({
-                    ...newSavingsTransaction,
-                    date: formatDate(evt.target.value),
-                  })
-                }
-              />
-            </div>
-
-          </form>
-
-          <button onClick={(e) => {
-            e.preventDefault()
-            createSavingsTransaction()
-          }}>Add</button>
-
-        </div>
-
+    <div className="p-4 sm:p-8 max-w-5xl mx-auto">
+      <div className="mb-6 sm:mb-8">
+        <h1 className="text-xl sm:text-2xl font-semibold text-white tracking-tight">Savings Goals - {getMonth()}</h1>
       </div>
 
-      <div className="split-tables">
-
-        <div className="split-table-wrapper">
-          <table>
-            <caption>Savings</caption>
-
-            <tbody>
-              <tr className="summary-table-row">
-                <td className="name-td savings-name-td"></td>
-                <td className="savings-amount-td">Amount</td>
-                <td className="change-td">Change</td>
-                <td className="delete-td"></td>
-              </tr>
-              <tr className="summary-table-row">
-                <td className="name-td savings-name-td">Totals</td>
-                <td className="savings-amount-td">$ {savingsSummary}</td>
-                <td className="change-td">$ {transactionSummary}</td>
-                <td className="delete-td"></td>
-              </tr>
-            </tbody>
-
-            <tbody>
-              {savings.length > 0 ? (
-                  savingsView
-                ) : (
-                  <tr>
-                    <td className="no-data-row">No Savings to show</td>
-                  </tr>
-                )}
-            </tbody>
-          </table>
+      {/* Main savings balance */}
+      <div className="bg-[#0a1628] border border-[#162d55] rounded-xl p-5 sm:p-6 mb-6 sm:mb-8 relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-br from-[#1d3a6a]/30 to-transparent pointer-events-none" />
+        <div className="relative">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-0">
+            <div>
+              <div className="text-xs text-[#38bdf8] uppercase tracking-widest font-semibold mb-1">Main Savings Balance</div>
+              <div className="text-3xl sm:text-4xl font-mono font-medium text-white">
+                $ 5000
+              </div>
+            </div>
+            <div className="flex flex-col gap-1 text-right">
+              <div className="text-xs text-[#3a5070] uppercase tracking-wider">Total incl. goals</div>
+              <div className="text-xl font-mono text-[#38bdf8]">${totalSaved.toLocaleString()}</div>
+            </div>
+          </div>
         </div>
-
-        <div className="split-table-wrapper">
-          <table>
-            <caption>Transactions</caption>
-
-            <tbody>
-              {savingsTransactions.length > 0 ? (
-                  savingTransactionsView
-                ) : (
-                  <tr>
-                    <td className="no-data-row">No Savings to show</td>
-                  </tr>
-                )}
-            </tbody>
-          </table>
+      </div>
+      
+      {/* Add form */}
+      <form onSubmit={e => createNewSavings(e)} className="bg-[#0a1628] border border-[#0f2040] rounded-lg p-4 sm:p-5 mb-6 sm:mb-8">
+        <h2 className="text-xs font-semibold text-[#38bdf8] uppercase tracking-widest mb-4">New Savings Goal</h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+          <div className="sm:col-span-2">
+            <label className="block text-xs text-[#3a5070] mb-1.5 uppercase tracking-wider">Goal Name</label>
+            <input
+              type="text"
+              value={newSavings.name}
+              onChange={e => setNewSavings(f => ({ ...f, name: e.target.value }))}
+              placeholder="e.g. New Car"
+              className="w-full bg-[#050d1a] border border-[#162d55] rounded px-3 py-2 text-sm text-white placeholder-[#243a55] focus:outline-none focus:border-[#1d6dce] transition-colors"
+            />
+          </div>
+          <div>
+            <label className="block text-xs text-[#3a5070] mb-1.5 uppercase tracking-wider">Target Amount ($)</label>
+            <input
+              type="number"
+              value={newSavings.target}
+              onChange={e => setNewSavings(f => ({ ...f, target: e.target.value }))}
+              placeholder="0.00"
+              className="w-full bg-[#050d1a] border border-[#162d55] rounded px-3 py-2 text-sm text-white font-mono placeholder-[#243a55] focus:outline-none focus:border-[#1d6dce] transition-colors"
+            />
+          </div>
+          <div>
+            <label className="block text-xs text-[#3a5070] mb-1.5 uppercase tracking-wider">Amount Saved ($)</label>
+            <input
+              type="number"
+              value={newSavings.current}
+              onChange={e => setNewSavings(f => ({ ...f, current: e.target.value }))}
+              placeholder="0.00"
+              className="w-full bg-[#050d1a] border border-[#162d55] rounded px-3 py-2 text-sm text-white font-mono placeholder-[#243a55] focus:outline-none focus:border-[#1d6dce] transition-colors"
+            />
+          </div>
+          <div>
+            <label className="block text-xs text-[#3a5070] mb-1.5 uppercase tracking-wider">Target Date</label>
+            <input
+              type="date"
+              value={newSavings.deadline}
+              onChange={e => setNewSavings(f => ({ ...f, deadline: e.target.value }))}
+              className="w-full bg-[#050d1a] border border-[#162d55] rounded px-3 py-2 text-sm text-white focus:outline-none focus:border-[#1d6dce] transition-colors"
+            />
+          </div>
         </div>
+        <button type="submit" className="mt-4 w-full sm:w-auto px-5 py-2 bg-[#1d6dce] hover:bg-[#2a7de0] text-white text-sm font-medium rounded transition-colors cursor-pointer">
+          Add Goal
+        </button>
+      </form>
+
+      {/* Summary */}
+      <div className="grid grid-cols-3 gap-3 sm:gap-4 mb-6 sm:mb-8">
+        <div className="bg-[#0a1628] border border-[#0f2040] rounded-lg p-3 sm:p-4">
+          <div className="text-[10px] text-[#3a5070] uppercase tracking-wider mb-1">Total Saved</div>
+          <div className="text-lg sm:text-2xl font-mono font-medium text-[#10b981]">${totalSaved.toLocaleString()}</div>
+        </div>
+        <div className="bg-[#0a1628] border border-[#0f2040] rounded-lg p-3 sm:p-4">
+          <div className="text-[10px] text-[#3a5070] uppercase tracking-wider mb-1">Target</div>
+          <div className="text-lg sm:text-2xl font-mono font-medium text-[#38bdf8]">${totalTarget.toLocaleString()}</div>
+        </div>
+        <div className="bg-[#0a1628] border border-[#0f2040] rounded-lg p-3 sm:p-4">
+          <div className="text-[10px] text-[#3a5070] uppercase tracking-wider mb-1">Progress</div>
+          <div className="text-lg sm:text-2xl font-mono font-medium text-[#f59e0b]">
+            {totalTarget > 0 ? ((totalSaved / totalTarget) * 100).toFixed(1) : '0.0'}%
+          </div>
+        </div>
+      </div>
+
+      {/* Goals grid — 1 col mobile, 2 col desktop */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        {goalCards}
       </div>
 
     </div>

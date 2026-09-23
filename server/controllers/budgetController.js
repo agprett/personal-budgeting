@@ -9,26 +9,14 @@ const budgetFunctions = {
   getBudgets: async (req, res) => {
     let data = []
     if(req.query.group) {
-      let response = await db.query(`
-        SELECT budgets.budget_id, budgets.name, budgets.amount, budgets.type, SUM(transactions.amount) actual FROM budgets
+      data = await db.query(`
+        SELECT budgets.budget_id, budgets.name, budgets.amount, SUM(transactions.amount) actual FROM budgets
         LEFT JOIN transactions ON transactions.budget_id = budgets.budget_id
         AND transactions.date >= DATE_TRUNC('month', CURRENT_DATE)
+        AND transactions.type != 'Income'
         GROUP BY budgets.budget_id
         ORDER BY budgets.name;
       `)
-
-      let expenses = []
-      let incomes = []
-
-      response[0].forEach(budget => {
-        if(budget.type === 'expense') {
-          expenses.push(budget)
-        } else {
-          incomes.push(budget)
-        }
-      })
-
-      data = {expenses, incomes}
     } else {
       data = await Budget.findAll()
     }
@@ -45,7 +33,7 @@ const budgetFunctions = {
   },
 
   updateBudget: async (req, res) => {
-    const {budget_id, name, amount, type} = req.body
+    const {budget_id, name, amount} = req.body
 
     const budget = await Budget.findByPk(budget_id)
 
@@ -55,10 +43,6 @@ const budgetFunctions = {
 
     if(amount) {
       budget.amount = amount
-    }
-
-    if(type) {
-      budget.type = type
     }
 
     await budget.save()
@@ -79,8 +63,7 @@ const budgetFunctions = {
   getSummary: async (req, res) => {
     const startOfMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1)
 
-    const expensePlanned = await Budget.sum('amount', {where: {type: 'expense'}})
-    const incomePlanned = await Budget.sum('amount', {where: {type: 'income'}})
+    const planned = await Budget.sum('amount')
 
 
     const transactions = await Transaction.findAll({
@@ -91,23 +74,18 @@ const budgetFunctions = {
       },
       include: {
         model: Budget,
-        attributes: ['type', 'name']
+        attributes: ['name']
       }
     })
 
-    let expenseActual = 0
-    let incomeActual = 0
+    let actual = 0
 
     transactions.forEach(transaction => {
-      if(transaction.Budget.type === 'expense') {
-        expenseActual += transaction.amount
-      } else if(transaction.Budget.type === 'income') {
-        incomeActual += transaction.amount
-      }
+      actual += transaction.amount
     })
 
 
-    res.status(200).send({expensePlanned, incomePlanned, expenseActual, incomeActual})
+    res.status(200).send({planned, actual})
   }
 }
 

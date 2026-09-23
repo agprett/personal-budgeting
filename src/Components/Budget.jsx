@@ -2,9 +2,10 @@ import axios from "axios"
 import { useEffect, useState } from "react"
 
 
-import BudgetView from "./BudgetView.jsx"
+import BudgetCard from "./BudgetCard.jsx"
 
 const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+const colors = ['#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#ef4444', '#38bdf8', '#f97316', '#ec4899']
 
 const getMonth = () => {
   let date = new Date()
@@ -17,30 +18,27 @@ const getMonth = () => {
 }
 
 function Budget () {
-  const [expenseBudgets, setExpenseBudgets] = useState([])
-  const [incomeBudgets, setIncomeBudgets] = useState([])
-  const [newBudget, setNewBudget] = useState({name: '', amount: 0, type: 'default'})
-  const [planned, setPlanned] = useState({expense: 0, income: 0})
-  const [actuals, setActuals] = useState({expense: 0, income: 0})
+  const [budgets, setBudgets] = useState([])
+  const [newBudget, setNewBudget] = useState({name: '', amount: 0})
+  const [planned, setPlanned] = useState(0)
+  const [actual, setActual] = useState(0)
 
   const refreshBudgets = () => {
     axios.get('/api/budget?group=true')
       .then(res => {
-        const {expenses, incomes} = res.data
-
-        setExpenseBudgets(expenses)
-
-        setIncomeBudgets(incomes)
+        if(res.data[0]) {
+          setBudgets(res.data[0])
+        }
       })
   }
 
   const refreshSummaries = () => {
     axios.get('/api/summary')
       .then(res => {
-        const { expensePlanned, incomePlanned, expenseActual, incomeActual } = res.data
+        const { planned, actual } = res.data
 
-        setPlanned({expense: expensePlanned, income: incomePlanned})
-        setActuals({expense: expenseActual, income: incomeActual})
+        setPlanned(planned || 0)
+        setActual(actual || 0)
       })
       .catch(err => {
         console.log(err)
@@ -57,12 +55,14 @@ function Budget () {
   }, [])
 
 
-  const createBudget = () => {
+  const createBudget = (e) => {
+    e.preventDefault()
+
     let body = {...newBudget}
 
     axios.post('/api/budget', body)
       .then(res => {
-        setNewBudget({name: '', amount: 0, type: 'default'})
+        setNewBudget({name: '', amount: 0})
 
         refreshBudgets()
         refreshSummaries()
@@ -72,121 +72,72 @@ function Budget () {
       })
   }
 
-  const budgetsView = (budgets) => budgets.map(budget => {
-
+  const budgetCards = budgets.map((budget, i) => {
+    const remaining = budget.amount - budget.actual
+    const over = remaining < 0
+    const color = colors[i % (colors.length -1)]
     return (
-      <BudgetView key={budget.budget_id} budget={budget} refreshBudgets={refreshBudgets} refreshSummaries={refreshSummaries} />
+      <BudgetCard key={budget.budget_id} budget={budget} remaining={remaining} over={over} color={color} refreshBudgets={refreshBudgets} refreshSummaries={refreshSummaries} />
     )
   })
 
 
   return (
-    <div>
-      <h3>Budget - {getMonth()}</h3>
-      
-      <div className="form-wrapper">
-        <h4>New Budget</h4>
-
-        <form>
-          <div className="form-inputs">
-            <label htmlFor="name">Name:</label>
-            <input id="name" value={newBudget.name} onChange={(evt) => setNewBudget({...newBudget, name: evt.target.value})} placeholder="Name"/>
-          </div>
-
-          <div className="form-inputs">
-            <label htmlFor="amount">Amount:</label>
-            <input id="amount" value={newBudget.amount} onChange={(evt) => setNewBudget({...newBudget, amount: evt.target.value})} placeholder="Amount" type="number"/>
-          </div>
-
-          <div className="form-inputs">
-            <label htmlFor="type">Type:</label>
-            <select
-              id="type"
-              value={newBudget.type}
-              onChange={evt => setNewBudget({...newBudget, type: evt.target.value})}
-            >
-              <option value='default' disabled>Select Type</option>
-              <option value='expense'>Expense</option>
-              <option value='income'>Income</option>
-            </select>
-          </div>
-
-        </form>
-
-        <button onClick={(e) => {
-          e.preventDefault()
-          createBudget()
-        }}>Add</button>
-
+    <div className="p-4 sm:p-8 max-w-5xl mx-auto">
+      <div className="mb-6 sm:mb-8">
+        <h1 className="text-xl sm:text-2xl font-semibold text-white tracking-tight">Budget - {getMonth()}</h1>
+        {/* <p className="text-sm text-[#3a5070] mt-1">Monthly allocation vs. spending</p> */}
       </div>
 
-      <div className="split-tables">
-        <div className="split-table-wrapper">
-          <table>
-            <caption>Expenses</caption>
-
-            <tbody>
-              <tr className="summary-table-row">
-                <td className="name-td"></td>
-                <td className="planned-td">Planned</td>
-                <td className="actual-td">Actual</td>
-                <td className="diff-td">Difference</td>
-                <td className="delete-td"></td>
-              </tr>
-              <tr className="summary-table-row">
-                <td className="name-td">Totals</td>
-                <td className="planned-td">$ {planned.expense}</td>
-                <td className="actual-td">$ {actuals.expense}</td>
-                <td className="diff-td">$ {planned.expense - actuals.expense}</td>
-                <td className="delete-td"></td>
-              </tr>
-            </tbody>
-
-            <tbody>
-              {expenseBudgets.length > 0 ? (
-                  budgetsView(expenseBudgets)
-                ) : (
-                  <tr>
-                    <td className="no-data-row">No budgets to show</td>
-                  </tr>
-                )}
-            </tbody>
-          </table>
+      <form onSubmit={(e) => createBudget(e)} className="bg-[#0a1628] border border-[#0f2040] rounded-lg p-4 sm:p-5 mb-6 sm:mb-8">
+        <h2 className="text-xs font-semibold text-[#38bdf8] uppercase tracking-widest mb-4">Add Category</h2>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
+          <div>
+            <label className="block text-xs text-[#3a5070] mb-1.5 uppercase tracking-wider">Category Name</label>
+            <input
+              type="text"
+              value={newBudget.name}
+              onChange={(evt) => setNewBudget({...newBudget, name: evt.target.value})}
+              placeholder="e.g. "
+              className="w-full bg-[#050d1a] border border-[#162d55] rounded px-3 py-2 text-sm text-white placeholder-[#243a55] focus:outline-none focus:border-[#1d6dce] transition-colors"
+            />
+          </div>
+          <div>
+            <label className="block text-xs text-[#3a5070] mb-1.5 uppercase tracking-wider">Allocated ($)</label>
+            <input
+              type="number"
+              value={newBudget.amount}
+              onChange={(evt) => setNewBudget({...newBudget, amount: evt.target.value})}
+              placeholder="0.00"
+              className="w-full bg-[#050d1a] border border-[#162d55] rounded px-3 py-2 text-sm text-white font-mono placeholder-[#243a55] focus:outline-none focus:border-[#1d6dce] transition-colors"
+            />
+          </div>
         </div>
 
-        <div className="split-table-wrapper">
-          <table>
-            <caption>Income</caption>
+        <button type="submit" className="mt-4 w-full sm:w-auto px-5 py-2 bg-[#1d6dce] hover:bg-[#2a7de0] text-white text-sm font-medium rounded transition-colors cursor-pointer">
+          Add Category
+        </button>
 
-            <tbody>
-              <tr className="summary-table-row">
-                <td className="name-td"></td>
-                <td className="planned-td">Planned</td>
-                <td className="actual-td">Actual</td>
-                <td className="diff-td">Difference</td>
-                <td className="delete-td"></td>
-              </tr>
-              <tr className="summary-table-row">
-                <td className="name-td">Totals</td>
-                <td className="planned-td">$ {planned.income}</td>
-                <td className="actual-td">$ {actuals.income}</td>
-                <td className="diff-td">$ {planned.income - actuals.income}</td>
-                <td className="delete-td"></td>
-              </tr>
-            </tbody>
+      </form>
 
-            <tbody>
-              {incomeBudgets.length > 0 ? (
-                budgetsView(incomeBudgets)
-              ) : (
-                <tr>
-                  <td className="no-data-row">No budgets to show</td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
+      {/* Summary */}
+      <div className="grid grid-cols-3 gap-3 sm:gap-4 mb-6 sm:mb-8">
+        {[
+          { label: 'Allocated', value: planned, color: 'text-[#38bdf8]' },
+          { label: 'Spent', value: actual, color: 'text-[#f59e0b]' },
+          { label: 'Remaining', value: planned - actual, color: planned - actual >= 0 ? 'text-[#10b981]' : 'text-[#ef4444]' },
+        ].map(s => (
+          <div key={s.label} className="bg-[#0a1628] border border-[#0f2040] rounded-lg p-3 sm:p-4">
+            <div className="text-[10px] text-[#3a5070] uppercase tracking-wider mb-1">{s.label}</div>
+            <div className={`text-lg sm:text-2xl font-mono font-medium ${s.color}`}>
+              ${Math.abs(s.value).toLocaleString('en-US', { minimumFractionDigits: 2 })}
+            </div>
+          </div>
+        ))}
+      </div>
 
+      <div className="space-y-3">
+        {budgetCards}
       </div>
 
     </div>

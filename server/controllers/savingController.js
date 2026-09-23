@@ -1,6 +1,5 @@
-import { Op, Sequelize } from "sequelize";
+import { DataTypes, Op, Sequelize } from "sequelize";
 import { Saving, Savingtransaction } from "../db/models.js";
-import savingTransactionFunctions from "./savingTransactionController.js";
 
 
 const savingFunctions = {
@@ -11,19 +10,29 @@ const savingFunctions = {
       attributes: [
         'saving_id',
         'name',
-        'amount',
-        [Sequelize.fn('SUM', Sequelize.col('Savingtransactions.amount')), 'change']
+        'target',
+        'deadline',
+        [Sequelize.fn('COALESCE', Sequelize.fn('SUM', Sequelize.col('allTx.amount')), 0), 'current'],
+        [Sequelize.fn('COALESCE', Sequelize.fn('SUM', Sequelize.col('monthTx.amount')), 0), 'change'],
       ],
-      include: {
-        model: Savingtransaction,
-        attributes: [],
-        where: {
-          date: {
-            [Op.gte]: startOfMonth
-          }
+      include: [
+        {
+          model: Savingtransaction,
+          as: 'monthTx',
+          attributes: [],
+          where: {
+            date: {
+              [Op.gte]: startOfMonth
+            }
+          },
+          required: false,
         },
-        required: false,
-      },
+        {
+          model: Savingtransaction,
+          as: 'allTx',
+          attributes: []
+        }
+      ],
       group: [Sequelize.col('Saving.saving_id')]
     })
 
@@ -33,13 +42,26 @@ const savingFunctions = {
   createSaving: async (req, res) => {
     let data = req.body
 
+    const {current} = data
+
     const saving = await Saving.create(data)
+
+    if(current > 0) {
+      const transaction = {
+        amount: current,
+        date: new Date().toISOString().slice(0, 10),
+        type: 'Deposit',
+        saving_id: saving.saving_id
+      }
+
+      const firstTx = await Savingtransaction.create(transaction)
+    }
 
     res.status(200).send('Saving created')
   },
 
   updateSaving: async (req, res) => {
-    const {saving_id, name, amount} = req.body
+    const {saving_id, name, target, deadline} = req.body
 
     const saving = await Saving.findByPk(saving_id)
 
@@ -47,8 +69,12 @@ const savingFunctions = {
       saving.name = name
     }
 
-    if(amount) {
-      saving.amount = +amount
+    if(target) {
+      saving.target = +target
+    }
+
+    if(deadline) {
+      saving.deadline = deadline
     }
 
     await saving.save()
@@ -69,7 +95,8 @@ const savingFunctions = {
   getSavingsSummary: async (req, res) => {
     const startOfMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1)
 
-    const savingsTotal = await Saving.sum('amount')
+    const savingsTotal = await Savingtransaction.sum('amount')
+    const savingsTarget = await Saving.sum('target')
 
     const savingsTransactionsTotal = await Savingtransaction.sum('amount', {
       where: {
@@ -79,7 +106,7 @@ const savingFunctions = {
       },
     })
 
-    res.status(200).send({savingsTotal, savingsTransactionsTotal})
+    res.status(200).send({savingsTarget, savingsTotal, savingsTransactionsTotal})
   }
 }
 

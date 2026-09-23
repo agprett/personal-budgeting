@@ -16,22 +16,11 @@ const transactionFunctions = {
       ],
       include: {
         model: Budget,
-        attributes: ['name', 'type']
+        attributes: ['name', 'budget_id']
       }
     })
 
-    let expenses = []
-    let incomes = []
-
-    response.forEach(transaction => {
-      if(transaction.Budget.type === 'expense') {
-        expenses.push(transaction)
-      } else {
-        incomes.push(transaction)
-      }
-    })
-
-    res.status(200).send({expenses, incomes})
+    res.status(200).send(response)
   },
 
   createTransaction: async (req, res) => {

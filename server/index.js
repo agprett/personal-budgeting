@@ -27,6 +27,11 @@ const {getSavings, createSaving, updateSaving, deleteSaving, getSavingsSummary} 
 import savingTransactionFunctions from './controllers/savingTransactionController.js'
 const {getSavingTransactions, createSavingTransaction, updateSavingTransaction, deleteSavingTransaction} = savingTransactionFunctions
 
+import debtFunctions from './controllers/debtController.js'
+const {getDebts, createDebt, updateDebt, deleteDebt, getDebtSummary} = debtFunctions
+
+import summaryFunctions from './controllers/summaryController.js'
+const {getCategoryOptions} = summaryFunctions
 
 app.get('/api/budget', getBudgets)
 app.post('/api/budget', createBudget)
@@ -48,8 +53,15 @@ app.post('/api/saving/transaction', createSavingTransaction)
 app.put('/api/saving/transaction', updateSavingTransaction)
 app.delete('/api/saving/transaction/:id', deleteSavingTransaction)
 
+app.get('/api/debt', getDebts)
+app.post('/api/debt', createDebt)
+app.put('/api/debt', updateDebt)
+app.delete('/api/debt/:id', deleteDebt)
+
 app.get('/api/summary', getSummary)
 app.get('/api/saving/summary', getSavingsSummary)
+app.get('/api/debt/summary', getDebtSummary)
+app.get('/api/summary/categories', getCategoryOptions)
 
 
 app.use(express.static(__dirname + '/../dist'))
