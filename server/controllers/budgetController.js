@@ -1,5 +1,4 @@
-import { Op } from "sequelize";
-import { Budget, Transaction } from "../db/models.js";
+import { Budget } from "../db/models.js";
 
 import connectToDB from "../db/db.js"
 
@@ -14,6 +13,7 @@ const budgetFunctions = {
         LEFT JOIN transactions ON transactions.budget_id = budgets.budget_id
         AND transactions.date >= DATE_TRUNC('month', CURRENT_DATE)
         AND transactions.type != 'Income'
+        WHERE budgets.name != 'Income'
         GROUP BY budgets.budget_id
         ORDER BY budgets.name;
       `)
@@ -58,34 +58,6 @@ const budgetFunctions = {
     await budget.destroy()
 
     res.status(200).send('Budget deleted')
-  },
-
-  getSummary: async (req, res) => {
-    const startOfMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1)
-
-    const planned = await Budget.sum('amount')
-
-
-    const transactions = await Transaction.findAll({
-      where: {
-        date: {
-          [Op.gte]: startOfMonth
-        },
-      },
-      include: {
-        model: Budget,
-        attributes: ['name']
-      }
-    })
-
-    let actual = 0
-
-    transactions.forEach(transaction => {
-      actual += transaction.amount
-    })
-
-
-    res.status(200).send({planned, actual})
   }
 }
 

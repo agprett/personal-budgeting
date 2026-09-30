@@ -1,31 +1,61 @@
+import axios from 'axios';
+import { useEffect, useState } from 'react';
 import {
   AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell,
   XAxis, YAxis, Tooltip, ResponsiveContainer, RadialBarChart, RadialBar,
 } from 'recharts';
 
+const colors = ['#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#d4c4f8', '#4d495b', '#f5effd', '#0b6696', '#494657', '#086a07',  '#1b0c31', '#604469']
+
+const tooltipStyle = {
+  backgroundColor: '#0a1628',
+  border: '1px solid #162d55',
+  borderRadius: '6px',
+  color: '#e2e8f0',
+  fontSize: '12px',
+  fontFamily: 'JetBrains Mono, monospace',
+};
+
+function StatCard({ label, value, sub, color }) {
+  return (
+    <div className="bg-[#0a1628] border border-[#0f2040] rounded-lg p-4">
+      <div className="text-[10px] text-[#3a5070] uppercase tracking-widest mb-2">{label}</div>
+      <div className="text-xl sm:text-2xl font-mono font-medium" style={{ color }}>{value}</div>
+      {sub && <div className="text-xs text-[#3a5070] mt-1">{sub}</div>}
+    </div>
+  );
+}
+
 function Dashboard () {
+  const [data, setData] = useState({cashFlow: {total: 0, breakdown: {income: [], expense: []}}, budgetUsed: {used: 0, budgeted: 0}, totalSaved: 0, activeGoals: 0, totalDebt: 0, debtAccounts: 0, budgets: [], savings: [], debts: [], transactions: []})
 
-  // return (
-  //   <div>
-  //     Dashboard page
-  //   </div>
-  // )
+  useEffect(() => {
+    axios.get('/api/summary/dashboard')
+      .then(res => {
+        setData(res.data)
+      })
+  }, [])
 
+  const debtBar = data.debts.map(d => ({
+    name: d.name.length > 12 ? d.name.slice(0, 12) + '…' : d.name,
+    remaining: d.remaining,
+    paid: d.paid,
+  }));
 
   return (
     <div className="p-4 sm:p-8 max-w-6xl mx-auto">
       <div className="mb-6 sm:mb-8">
         <h1 className="text-xl sm:text-2xl font-semibold text-white tracking-tight">Dashboard</h1>
-        <p className="text-sm text-[#3a5070] mt-1">September 2026 — Financial Overview</p>
+        <p className="text-sm text-[#3a5070] mt-1">September 2026</p>
       </div>
 
       {/* KPI row */}
-      {/* <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6 sm:mb-8">
-        <StatCard label="Net Cash Flow" value={`${net >= 0 ? '+' : ''}$${net.toLocaleString()}`} sub="Income minus expenses" color={net >= 0 ? '#10b981' : '#ef4444'} />
-        <StatCard label="Budget Used" value={`${totalBudgeted > 0 ? Math.round((totalSpent / totalBudgeted) * 100) : 0}%`} sub={`$${totalSpent.toLocaleString()} of $${totalBudgeted.toLocaleString()}`} color="#38bdf8" />
-        <StatCard label="Total Saved" value={`$${totalSaved.toLocaleString()}`} sub={`${savings.length} active goals`} color="#10b981" />
-        <StatCard label="Total Debt" value={`$${totalDebt.toLocaleString()}`} sub={`${debts.length} accounts`} color="#ef4444" />
-      </div> */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6 sm:mb-8">
+        <StatCard label="Net Cash Flow This Month" value={`${data.cashFlow.total >= 0 ? '+' : '-'}$${Math.abs(data.cashFlow.total).toLocaleString()}`} sub="Income minus expenses" color={data.cashFlow.total >= 0 ? '#10b981' : '#ef4444'} />
+        <StatCard label="Budget Used" value={`${data.budgetUsed.budgeted > 0 ? Math.round((data.budgetUsed.used / data.budgetUsed.budgeted) * 100) : 0}%`} sub={`$${data.budgetUsed.used.toLocaleString()} of $${data.budgetUsed.budgeted.toLocaleString()}`} color="#38bdf8" />
+        <StatCard label="Total Saved" value={`$${data.totalSaved.toLocaleString()}`} sub={`${data.activeGoals} active goals`} color="#10b981" />
+        <StatCard label="Total Debt" value={`$${data.totalDebt.toLocaleString()}`} sub={`${data.debtAccounts} accounts`} color="#ef4444" />
+      </div>
 
       {/* Income vs Expenses */}
       {/* <div className="bg-[#0a1628] border border-[#0f2040] rounded-lg p-4 sm:p-5 mb-4">
@@ -50,7 +80,7 @@ function Dashboard () {
             </defs>
             <XAxis dataKey="month" tick={{ fill: '#3a5070', fontSize: 10 }} axisLine={false} tickLine={false} />
             <YAxis tick={{ fill: '#3a5070', fontSize: 10 }} axisLine={false} tickLine={false} tickFormatter={v => `$${(v / 1000).toFixed(0)}k`} />
-            <Tooltip contentStyle={tooltipStyle} formatter={(v: number) => `$${v.toLocaleString()}`} />
+            <Tooltip contentStyle={tooltipStyle} formatter={(v) => `$${v.toLocaleString()}`} />
             <Area type="monotone" dataKey="income" stroke="#10b981" strokeWidth={2} fill="url(#incGrad)" name="Income" />
             <Area type="monotone" dataKey="expenses" stroke="#ef4444" strokeWidth={2} fill="url(#expGrad)" name="Expenses" />
           </AreaChart>
@@ -58,111 +88,105 @@ function Dashboard () {
       </div> */}
 
       {/* Budget + Savings row */}
-      {/* <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
-        
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+        {/* Budget pie */}
         <div className="bg-[#0a1628] border border-[#0f2040] rounded-lg p-4 sm:p-5">
           <div className="flex items-center justify-between mb-4">
             <div>
               <div className="text-xs text-[#38bdf8] uppercase tracking-widest font-semibold mb-0.5">Budget</div>
-              <div className="text-sm text-white">Allocation</div>
+              <div className="text-sm text-white">Spent vs. Allocated</div>
             </div>
-            <button onClick={() => onNavigate('budget')} className="text-[10px] text-[#3a5070] hover:text-[#38bdf8] transition-colors cursor-pointer uppercase tracking-wider">Manage →</button>
+            {/* <button onClick={() => onNavigate('budget')} className="text-[10px] text-[#3a5070] hover:text-[#38bdf8] transition-colors cursor-pointer uppercase tracking-wider">Manage →</button> */}
           </div>
-          <ResponsiveContainer width="100%" height={140}>
-            <PieChart>
-              <Pie data={budgetPieData} cx="50%" cy="50%" innerRadius={40} outerRadius={60} paddingAngle={2} dataKey="value">
-                {budgetPieData.map((entry, i) => <Cell key={i} fill={entry.color} />)}
-              </Pie>
-              <Tooltip contentStyle={tooltipStyle} formatter={(v: number) => `$${v.toLocaleString()}`} />
-            </PieChart>
+          <ResponsiveContainer width="100%" height={170}>
+            <BarChart data={data.budgets.map((c, i) => ({ name: c.name.length > 8 ? c.name.slice(0, 8) + '…' : c.name, Spent: Math.abs(c.spent), Remaining: Math.max(c.allocated + c.spent, 0), color: colors[i % (colors.length - 1)] }))} barSize={18}>
+              <XAxis dataKey="name" tick={{ fill: '#3a5070', fontSize: 9 }} axisLine={false} tickLine={false} />
+              <YAxis tick={{ fill: '#3a5070', fontSize: 9 }} axisLine={false} tickLine={false} tickFormatter={v => `$${v}`} width={32} />
+              <Tooltip contentStyle={tooltipStyle} formatter={(v) => `$${v.toLocaleString()}`} />
+              <Bar dataKey="Spent" stackId="a" radius={[0, 0, 0, 0]}>
+                {data.budgets.map((c, i) => <Cell key={i} fill={colors[i % (colors.length - 1)]} />)}
+              </Bar>
+              <Bar dataKey="Remaining" stackId="a" fill="#0f2040" radius={[3, 3, 0, 0]} />
+            </BarChart>
           </ResponsiveContainer>
-          <div className="grid grid-cols-2 gap-x-3 gap-y-1 mt-1">
-            {budget.slice(0, 4).map(c => (
-              <div key={c.id} className="flex items-center gap-1.5">
-                <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: c.color }} />
-                <span className="text-[10px] text-[#5a7ba0] truncate">{c.name}</span>
-              </div>
-            ))}
-          </div>
-        </div> */}
+        </div>
 
-        {/* Savings radial */}
-        {/* <div className="bg-[#0a1628] border border-[#0f2040] rounded-lg p-4 sm:p-5">
+        {/* Savings pie */}
+        <div className="bg-[#0a1628] border border-[#0f2040] rounded-lg p-4 sm:p-5">
           <div className="flex items-center justify-between mb-4">
             <div>
               <div className="text-xs text-[#38bdf8] uppercase tracking-widest font-semibold mb-0.5">Savings</div>
-              <div className="text-sm text-white">Goal Progress</div>
+              <div className="text-sm text-white">Total Saved</div>
             </div>
-            <button onClick={() => onNavigate('savings')} className="text-[10px] text-[#3a5070] hover:text-[#38bdf8] transition-colors cursor-pointer uppercase tracking-wider">View →</button>
+            {/* <button onClick={() => onNavigate('savings')} className="text-[10px] text-[#3a5070] hover:text-[#38bdf8] transition-colors cursor-pointer uppercase tracking-wider">View →</button> */}
           </div>
           <ResponsiveContainer width="100%" height={140}>
-            <RadialBarChart cx="50%" cy="50%" innerRadius={20} outerRadius={65} data={savingsRadial} startAngle={90} endAngle={-270}>
-              <RadialBar dataKey="value" cornerRadius={3} background />
-              <Tooltip contentStyle={tooltipStyle} formatter={(v: number) => `${v}%`} />
-            </RadialBarChart>
+            <PieChart>
+              <Pie data={data.savings.map((g, i) => ({ name: g.name, value: +g.amount, color: colors[i % (colors.length - 1)] }))} cx="50%" cy="50%" innerRadius={40} outerRadius={60} paddingAngle={2} dataKey="value">
+                {data.savings.map((g, i) => <Cell key={i} fill={colors[i % (colors.length - 1)]} />)}
+              </Pie>
+              <Tooltip contentStyle={tooltipStyle} formatter={(v) => `$${v.toLocaleString()}`} />
+            </PieChart>
           </ResponsiveContainer>
-          <div className="space-y-1 mt-1">
-            {savings.slice(0, 3).map(g => (
-              <div key={g.id} className="flex items-center justify-between">
-                <div className="flex items-center gap-1.5">
-                  <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: g.color }} />
-                  <span className="text-[10px] text-[#5a7ba0] truncate max-w-[100px]">{g.name}</span>
-                </div>
-                <span className="text-[10px] font-mono text-[#3a5070]">{Math.round((g.current / g.target) * 100)}%</span>
+          <div className="grid grid-cols-2 gap-x-3 gap-y-1 mt-1">
+            {data.savings.slice(0, 4).map((g, i) => (
+              <div key={g.saving_id} className="flex items-center gap-1.5">
+                <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: colors[i % (colors.length - 1)] }} />
+                <span className="text-[10px] text-[#5a7ba0] truncate">{g.name}</span>
               </div>
             ))}
           </div>
         </div>
-      </div> */}
+      </div>
 
-      {/* Debt bar */}
-      {/* <div className="bg-[#0a1628] border border-[#0f2040] rounded-lg p-4 sm:p-5 mb-4">
+     {/* Debt bar */}
+      <div className="bg-[#0a1628] border border-[#0f2040] rounded-lg p-4 sm:p-5 mb-4">
         <div className="flex items-center justify-between mb-4">
           <div>
             <div className="text-xs text-[#38bdf8] uppercase tracking-widest font-semibold mb-0.5">Debts</div>
             <div className="text-sm text-white">Remaining vs. Paid Off</div>
           </div>
-          <button onClick={() => onNavigate('debts')} className="text-[10px] text-[#3a5070] hover:text-[#38bdf8] transition-colors cursor-pointer uppercase tracking-wider">Manage →</button>
+          {/* <button onClick={() => onNavigate('debts')} className="text-[10px] text-[#3a5070] hover:text-[#38bdf8] transition-colors cursor-pointer uppercase tracking-wider">Manage →</button> */}
         </div>
         <ResponsiveContainer width="100%" height={120}>
           <BarChart data={debtBar} layout="vertical">
             <XAxis type="number" tick={{ fill: '#3a5070', fontSize: 10 }} axisLine={false} tickLine={false} tickFormatter={v => `$${(v / 1000).toFixed(0)}k`} />
             <YAxis type="category" dataKey="name" tick={{ fill: '#5a7ba0', fontSize: 11 }} axisLine={false} tickLine={false} width={80} />
-            <Tooltip contentStyle={tooltipStyle} formatter={(v: number) => `$${v.toLocaleString()}`} />
+            <Tooltip contentStyle={tooltipStyle} formatter={(v) => `$${v.toLocaleString()}`} />
             <Bar dataKey="paid" stackId="a" fill="#3b82f6" name="Paid" />
             <Bar dataKey="remaining" stackId="a" fill="#ef4444" name="Remaining" radius={[0, 3, 3, 0]} />
           </BarChart>
         </ResponsiveContainer>
-      </div> */}
+      </div>
 
       {/* Recent transactions */}
-      {/* <div className="bg-[#0a1628] border border-[#0f2040] rounded-lg p-4 sm:p-5">
+      <div className="bg-[#0a1628] border border-[#0f2040] rounded-lg p-4 sm:p-5">
         <div className="flex items-center justify-between mb-4">
           <div>
             <div className="text-xs text-[#38bdf8] uppercase tracking-widest font-semibold mb-0.5">Transactions</div>
             <div className="text-sm text-white">Recent Activity</div>
           </div>
-          <button onClick={() => onNavigate('transactions')} className="text-[10px] text-[#3a5070] hover:text-[#38bdf8] transition-colors cursor-pointer uppercase tracking-wider">View All →</button>
+          {/* <button onClick={() => onNavigate('transactions')} className="text-[10px] text-[#3a5070] hover:text-[#38bdf8] transition-colors cursor-pointer uppercase tracking-wider">View All →</button> */}
         </div>
         <div className="space-y-0">
-          {recentTx.map(tx => (
+          {data.transactions.map(tx => (
             <div key={tx.id} className="flex items-center justify-between py-2.5 border-b border-[#0f2040] last:border-0">
               <div className="flex items-center gap-3 min-w-0">
-                <div className={`w-7 h-7 rounded flex-shrink-0 flex items-center justify-center text-xs ${tx.type === 'income' ? 'bg-[#10b981]/20 text-[#10b981]' : 'bg-[#ef4444]/20 text-[#ef4444]'}`}>
-                  {tx.type === 'income' ? '↑' : '↓'}
+                <div className={`w-7 h-7 rounded flex-shrink-0 flex items-center justify-center text-xs ${tx.type === 'Income' || tx.type === 'Payment' || tx.type === 'Deposit' ? 'bg-[#10b981]/20 text-[#10b981]' : 'bg-[#ef4444]/20 text-[#ef4444]'}`}>
+                  {tx.type === 'Income' || tx.type === 'Payment' || tx.type === 'Deposit' ? '↑' : '↓'}
                 </div>
                 <div className="min-w-0">
-                  <div className="text-sm text-white truncate">{tx.description}</div>
+                  <div className="text-sm text-white truncate">{tx.name}</div>
                   <div className="text-[10px] text-[#3a5070]">{tx.category} · {tx.date}</div>
                 </div>
               </div>
-              <div className={`text-sm font-mono font-medium flex-shrink-0 ml-3 ${tx.type === 'income' ? 'text-[#10b981]' : 'text-[#ef4444]'}`}>
+              <div className={`text-sm font-mono font-medium flex-shrink-0 ml-3 ${tx.type === 'Income' || tx.type === 'Payment' || tx.type === 'Deposit' ? 'text-[#10b981]' : 'text-[#ef4444]'}`}>
                 {tx.type === 'income' ? '+' : '-'}${tx.amount.toLocaleString('en-US', { minimumFractionDigits: 2 })}
               </div>
             </div>
           ))}
         </div>
-      </div> */}
+      </div>
     </div>
   );
 }

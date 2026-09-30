@@ -1,6 +1,9 @@
 import { useEffect, useRef, useState } from "react";
 
-function EdittingField ({value, type = 'text', options, onSave, className, inputClassName}) {
+function EdittingField ({value, type = 'text', options, txcat, onSave, className, inputClassName}) {
+  if(txcat) {
+    console.log(options.category)
+  }
   const inputRef = useRef(null)
   const [edit, setEdit] = useState(false)
   const [draft, setDraft] = useState(value || '')
@@ -26,11 +29,22 @@ function EdittingField ({value, type = 'text', options, onSave, className, input
         <select
           ref={inputRef}
           value={draft}
-          onChange={e => setDraft(e.target.value)}
+          onChange={e => {
+            setDraft(e.target.value)
+            onSave(e.target.value)
+            setEdit(false)
+          }}
           onBlur={commit}
           className={base + ' cursor-pointer'}
         >
-          {options.map(o => <option key={o}>{o}</option>)}
+          {
+            txcat ? (
+              options[txcat].map(o => <options key={o.id} value={o[`${txcat}_id`]}>{o.name}</options>)
+            ) : (
+              // <options>'Failed</options>
+              options.map(o => <option key={o}>{o}</option>)
+            )
+          }
         </select>
       )
     } else {

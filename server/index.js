@@ -16,7 +16,7 @@ app.use(express.json())
 
 
 import budgetFunctions from './controllers/budgetController.js'
-const {getBudgets, createBudget, updateBudget, deleteBudget, getSummary} = budgetFunctions
+const {getBudgets, createBudget, updateBudget, deleteBudget} = budgetFunctions
 
 import transactionFunctions from './controllers/transactionController.js'
 const {getTransactions, createTransaction, updateTransaction, deleteTransaction} = transactionFunctions
@@ -31,7 +31,7 @@ import debtFunctions from './controllers/debtController.js'
 const {getDebts, createDebt, updateDebt, deleteDebt, getDebtSummary} = debtFunctions
 
 import summaryFunctions from './controllers/summaryController.js'
-const {getCategoryOptions} = summaryFunctions
+const {getSummary, getDashboard, getCategoryOptions} = summaryFunctions
 
 app.get('/api/budget', getBudgets)
 app.post('/api/budget', createBudget)
@@ -59,6 +59,7 @@ app.put('/api/debt', updateDebt)
 app.delete('/api/debt/:id', deleteDebt)
 
 app.get('/api/summary', getSummary)
+app.get('/api/summary/dashboard', getDashboard)
 app.get('/api/saving/summary', getSavingsSummary)
 app.get('/api/debt/summary', getDebtSummary)
 app.get('/api/summary/categories', getCategoryOptions)

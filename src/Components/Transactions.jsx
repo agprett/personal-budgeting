@@ -1,7 +1,7 @@
 import axios from "axios"
 import { useEffect, useState } from "react"
 
-import TransactionView from "./TransactionView.jsx"
+import TransactionCard from "./TransactionCard.jsx"
 
 const today = new Date()
 const todayFormatted = today.toISOString().split('T')[0]
@@ -26,18 +26,18 @@ const getMonth = () => {
   return `${month} ${year}`
 }
 
-const buttonOptions = {'budget': ['expense', 'income'], 'saving': ['withdrawl', 'deposit'], 'debt': ['charge', 'payment']}
+const buttonOptions = {'budget': ['Expense', 'Income'], 'saving': ['Withdrawl', 'Deposit'], 'debt': ['Charge', 'Payment']}
 
 function Transactions () {
   const [ transactions, setTransactions ] = useState([])
-  const [ newTransaction, setNewTransaction ] = useState({ name: '', amount: 0, date: todayFormatted, type: 'expense', budget_id: 'default' })
+  const [ newTransaction, setNewTransaction ] = useState({ name: '', amount: 0, date: todayFormatted, type: 'Expense', category: 'default', budget_id: 'default' })
   const [ typeOptions, setTypeOptions ] = useState('budget')
   const [ budgets, setBudgets ] = useState([])
   const [ savings, setSavings ] = useState([])
   const [ debts, setDebts ] = useState([])
 
   const refreshTransactions = () => {
-    axios.get('/api/transaction')
+    axios.get('/api/transaction?all=true')
       .then(res => {
         setTransactions(res.data)
       })
@@ -47,14 +47,6 @@ function Transactions () {
   }
 
   const refreshBudgets = () => {
-    axios.get('/api/budget?group=type')
-      .then((res) => {  
-        setBudgets(res.data[0])
-      })
-      .catch(err => {
-        console.log(err)
-      })
-
     axios.get('/api/summary/categories?budget=true&saving=true&debt=true')
       .then(res => {
         const {budgets, savings, debts} = res.data
@@ -62,6 +54,10 @@ function Transactions () {
         setBudgets(budgets)
         setSavings(savings)
         setDebts(debts)
+
+        if(budgets[0]) {
+          setNewTransaction(f => ({...f, budget_id: budgets[0].budget_id, category: `budget/Expense/${budgets[0].budget_id}`}))
+        }
       })
       .catch(err => {
         console.log(err)
@@ -69,12 +65,9 @@ function Transactions () {
   }
 
   useEffect(() => {
+    refreshBudgets()
     refreshTransactions()
   }, [])
-
-  useEffect(() => {
-    refreshBudgets()
-    }, [])
 
 
   const createNewTransaction = (e) => {
@@ -90,30 +83,53 @@ function Transactions () {
         console.log(err)
       })
 
-      setNewTransaction({ name: '', amount: 0, date: todayFormatted, budget_id: 'default' })
+      setNewTransaction({ name: '', amount: 0, date: todayFormatted, type: 'Expense', budget_id: 'default' })
+  }
+
+  const updateTransaction = (updatedTransaction) => {
+    axios.put('/api/transaction', updatedTransaction)
+      .then(res => {
+        refreshTransactions()
+        refreshBudgets()
+      })
+      .catch(err => {
+        console.log(err)
+      })
+  }
+  
+  const deleteTransaction = (id, type) => {
+    axios.delete(`/api/transaction/${id}?type=${type}`)
+      .then(res => {
+        refreshTransactions()
+        refreshBudgets()
+      })
+      .catch(err => {
+        console.log(err)
+      })
   }
 
 
   const budgetSelects = budgets.map((budget) => {
     return (
-      <option key={budget.budget_id} value={`budget/expense/${budget.budget_id}`}>{budget.name}</option>
+      <option key={budget.budget_id} value={`budget/Expense/${budget.budget_id}`}>{budget.name}</option>
     )
   })
 
   const savingSelects = savings.map((saving) => {
     return (
-      <option key={saving.saving_id} value={`saving/withdrawl/${saving.saving_id}`} >{saving.name}</option>
+      <option key={saving.saving_id} value={`saving/Withdrawl/${saving.saving_id}`} >{saving.name}</option>
     )
   })
 
   const debtSelects = debts.map((debt) => {
     return (
-      <option key={debt.debt_id} value={`debt/charge/${debt.debt_id}`} >{debt.name}</option>
+      <option key={debt.debt_id} value={`debt/Charge/${debt.debt_id}`} >{debt.name}</option>
     )
   })
+
   const transactionsView = transactions.map((transaction, i) => {
     return (
-      <TransactionView key={transaction.transaction_id} i={i} transaction={transaction} budgets={budgets} refreshBudgets={refreshBudgets} refreshTransactions={refreshTransactions} />
+      <TransactionCard key={i} i={i} transaction={transaction} budgets={budgets} updateTransaction={updateTransaction} deleteTransaction={deleteTransaction} options={buttonOptions[transaction.txcat]} />
     )
   })
 
@@ -155,8 +171,7 @@ function Transactions () {
               onChange={e => {
                 const data = e.target.value.split('/')
 
-                setNewTransaction(f => ({ ...f, category: e.target.value}))
-                setNewTransaction(f => ({...f, type: data[1]}))
+                setNewTransaction(f => ({...f, type: data[1], budget_id: data[2], category: e.target.value}))
                 setTypeOptions(data[0])
 
                 if(data[0] !== 'budget') {
@@ -165,8 +180,8 @@ function Transactions () {
               }}
               className="w-full bg-[#050d1a] border border-[#162d55] rounded px-3 py-2 text-sm text-white focus:outline-none focus:border-[#1d6dce] transition-colors"
             >
+              <option value={'default'} disabled>Select A Category</option>
               <optgroup label="Budget">
-                <option value={'budget/expense/income'}>Income</option>
                 {budgetSelects}
               </optgroup>
               <optgroup label="Saving">
@@ -196,7 +211,7 @@ function Transactions () {
                   onClick={() => setNewTransaction(f => ({ ...f, type: t }))}
                   className={`flex-1 py-2 rounded text-sm font-medium capitalize transition-colors cursor-pointer ${
                     newTransaction.type === t
-                      ? (t === 'income' || t === 'deposit' || t === 'payment') ? 'bg-[#10b981] text-white' : 'bg-[#ef4444] text-white'
+                      ? (t === 'Income' || t === 'Deposit' || t === 'Payment') ? 'bg-[#10b981] text-white' : 'bg-[#ef4444] text-white'
                       : 'bg-[#050d1a] border border-[#162d55] text-[#5a7ba0] hover:text-white'
                   }`}
                 >

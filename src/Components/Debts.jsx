@@ -87,6 +87,7 @@ function Debts () {
     axios.put('/api/debt', updatedDebt)
       .then(res => {
         refreshDebts()
+        setNewDebt({name: '', total: 0, remaining: 0, interestRate: 0, minPayment: 0, dueDate: ''})
       })
       .catch(err => {
         console.log(err)

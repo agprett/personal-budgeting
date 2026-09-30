@@ -5,7 +5,7 @@ import { useEffect, useState } from "react"
 import BudgetCard from "./BudgetCard.jsx"
 
 const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
-const colors = ['#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#ef4444', '#38bdf8', '#f97316', '#ec4899']
+const colors = ['#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#d4c4f8', '#4d495b', '#f5effd', '#0b6696', '#494657', '#086a07',  '#1b0c31', '#604469']
 
 const getMonth = () => {
   let date = new Date()

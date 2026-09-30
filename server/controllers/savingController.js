@@ -13,28 +13,35 @@ const savingFunctions = {
         'target',
         'deadline',
         [Sequelize.fn('COALESCE', Sequelize.fn('SUM', Sequelize.col('allTx.amount')), 0), 'current'],
-        [Sequelize.fn('COALESCE', Sequelize.fn('SUM', Sequelize.col('monthTx.amount')), 0), 'change'],
+        // [Sequelize.fn('COALESCE', Sequelize.fn('SUM', Sequelize.col('monthTx.amount')), 0), 'change'],
       ],
       include: [
-        {
-          model: Savingtransaction,
-          as: 'monthTx',
-          attributes: [],
-          where: {
-            date: {
-              [Op.gte]: startOfMonth
-            }
-          },
-          required: false,
-        },
+        // {
+        //   model: Savingtransaction,
+        //   as: 'monthTx',
+        //   attributes: [],
+        //   where: {
+        //     date: {
+        //       [Op.gte]: startOfMonth
+        //     }
+        //   },
+        //   required: false,
+        // },
         {
           model: Savingtransaction,
           as: 'allTx',
           attributes: []
         }
       ],
-      group: [Sequelize.col('Saving.saving_id')]
+      where: {
+        name: {
+          [Op.ne]: 'Overall'
+        }
+      },
+      group:[Sequelize.col('Saving.saving_id')]
     })
+
+    console.log(response)
 
     res.status(200).send(response)
   },
@@ -96,7 +103,25 @@ const savingFunctions = {
     const startOfMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1)
 
     const savingsTotal = await Savingtransaction.sum('amount')
-    const savingsTarget = await Saving.sum('target')
+    const savingsTarget = await Saving.sum('target', {
+      where: {
+        name: {
+          [Op.ne]: 'Overall'
+        }
+      }
+    })
+
+    const overallSaving = await Saving.findOne({
+      where:{
+        name: 'Overall'
+      }
+    })
+
+    const overall = await Savingtransaction.sum('amount', {
+      where: {
+        saving_id: overallSaving.saving_id
+      }
+    })
 
     const savingsTransactionsTotal = await Savingtransaction.sum('amount', {
       where: {
@@ -106,7 +131,7 @@ const savingFunctions = {
       },
     })
 
-    res.status(200).send({savingsTarget, savingsTotal, savingsTransactionsTotal})
+    res.status(200).send({savingsTarget, savingsTotal, overall, savingsTransactionsTotal})
   }
 }
 

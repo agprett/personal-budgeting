@@ -15,7 +15,7 @@ const formatDate = (date) => {
 }
 
 const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
-const colors = ['#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#ef4444', '#38bdf8', '#f97316', '#ec4899']
+const colors = ['#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#d4c4f8', '#4d495b', '#f5effd', '#0b6696', '#494657', '#086a07',  '#1b0c31', '#604469']
 
 const getMonth = () => {
   let date = new Date()
@@ -31,6 +31,7 @@ function Savings () {
   const [savings, setSavings] = useState([])
   const [totalSaved, setTotalSaved] = useState(0)
   const [totalTarget, setTotalTarget] = useState(0)
+  const [overall, setOverall] = useState(0)
   const [newSavings, setNewSavings] = useState({name: '', target: '', current: '', deadline: ''})
 
   const refreshSavings = () => {
@@ -76,7 +77,7 @@ function Savings () {
   useEffect(() => {
     axios.get('/api/saving/summary')
       .then(res => {
-        const {savingsTarget, savingsTotal, savingsTransactionsTotal} = res.data
+        const {savingsTarget, savingsTotal, overall, savingsTransactionsTotal} = res.data
 
         if(savingsTarget) {
           setTotalTarget(savingsTarget)
@@ -88,6 +89,10 @@ function Savings () {
           setTotalSaved(savingsTotal)
         } else {
           setTotalSaved(0)
+        }
+
+        if(overall) {
+          setOverall(overall)
         }
 
       })
@@ -155,12 +160,12 @@ function Savings () {
             <div>
               <div className="text-xs text-[#38bdf8] uppercase tracking-widest font-semibold mb-1">Main Savings Balance</div>
               <div className="text-3xl sm:text-4xl font-mono font-medium text-white">
-                $ 5000
+                $ {overall.toLocaleString()}
               </div>
             </div>
             <div className="flex flex-col gap-1 text-right">
               <div className="text-xs text-[#3a5070] uppercase tracking-wider">Total incl. goals</div>
-              <div className="text-xl font-mono text-[#38bdf8]">${totalSaved.toLocaleString()}</div>
+              <div className="text-xl font-mono text-[#38bdf8]">${(overall + totalSaved).toLocaleString()}</div>
             </div>
           </div>
         </div>

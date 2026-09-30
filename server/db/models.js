@@ -77,9 +77,9 @@ Transaction.init({
     type: DataTypes.STRING,
     allowNull: false,
     defaultValue: 'Expense',
-    validate: {
-      isIn: [['Expense', 'Income']]
-    }
+    // validate: {
+    //   isIn: [['Expense', 'Income']]
+    // }
   }
 }, {
   sequelize: db
@@ -136,9 +136,9 @@ Savingtransaction.init({
     type: DataTypes.STRING,
     allowNull: false,
     defaultValue: 'Withdrawl',
-    validate: {
-      isIn: [['Withdrawl', 'Deposit']]
-    }
+    // validate: {
+    //   isIn: [['Withdrawl', 'Deposit']]
+    // }
   },
   amount: {
     type: DataTypes.INTEGER,
@@ -216,9 +216,9 @@ Debttransaction.init({
     type: DataTypes.STRING,
     allowNull: false,
     defaultValue: 'Charge',
-    validate: {
-      isIn: [['Charge', 'Payment']]
-    }
+    // validate: {
+    //   isIn: [['Charge', 'Payment']]
+    // }
   },
   amount: {
     type: DataTypes.INTEGER,
