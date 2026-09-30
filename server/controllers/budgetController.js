@@ -9,7 +9,7 @@ const budgetFunctions = {
     let data = []
     if(req.query.group) {
       data = await db.query(`
-        SELECT budgets.budget_id, budgets.name, budgets.amount, SUM(transactions.amount) actual FROM budgets
+        SELECT budgets.budget_id, budgets.name, budgets.amount, COALESCE(SUM(transactions.amount), 0)::int actual FROM budgets
         LEFT JOIN transactions ON transactions.budget_id = budgets.budget_id
         AND transactions.date >= DATE_TRUNC('month', CURRENT_DATE)
         AND transactions.type != 'Income'

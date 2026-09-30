@@ -1,19 +1,4 @@
-import axios from "axios"
-import { useEffect, useRef, useState } from "react"
-
-import EdittingField from "./EdittingField"
-
-const formatDate = (date) => {
-  let objDate = new Date(date)
-
-  let splitDate = objDate.toISOString().split('T')[0].split('-')
-
-  let formattedDate = `${splitDate[1]}/${splitDate[2]}/${splitDate[0]}`
-
-  return formattedDate
-}
-
-const today = new Date()
+import EdittingField from "./EdittingField.jsx"
 
 function TransactionCard({ transaction, deleteTransaction, options = [], i, updateTransaction }) {
   return (  

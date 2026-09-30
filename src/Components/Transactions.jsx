@@ -2,6 +2,7 @@ import axios from "axios"
 import { useEffect, useState } from "react"
 
 import TransactionCard from "./TransactionCard.jsx"
+import SmallTransactionCard from "./SmallTransactionCard.jsx"
 
 const today = new Date()
 const todayFormatted = today.toISOString().split('T')[0]
@@ -133,6 +134,10 @@ function Transactions () {
     )
   })
 
+  const smallTransactionsView = transactions.map((transaction, i) => {
+    return <SmallTransactionCard key={i} transaction={transaction} budgets={budgets} updateTransaction={updateTransaction} deleteTransaction={deleteTransaction} options={buttonOptions[transaction.txcat]} />
+  })
+
   return (
     <div className="p-4 sm:p-8 max-w-5xl mx-auto">
       <div className="mb-6 sm:mb-8">
@@ -240,6 +245,12 @@ function Transactions () {
             {transactionsView}
           </tbody>
         </table>
+        {transactions.length === 0 && <div className="text-center py-12 text-[#3a5070] text-sm">No transactions found</div>}
+      </div>
+
+      {/* Mobile cards */}
+      <div className="sm:hidden space-y-2">
+        {smallTransactionsView}
         {transactions.length === 0 && <div className="text-center py-12 text-[#3a5070] text-sm">No transactions found</div>}
       </div>
     </div>

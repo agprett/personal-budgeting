@@ -73,7 +73,8 @@ function Budget () {
   }
 
   const budgetCards = budgets.map((budget, i) => {
-    const remaining = budget.amount - budget.actual
+    console.log(budget)
+    const remaining = budget.amount + budget.actual
     const over = remaining < 0
     const color = colors[i % (colors.length -1)]
     return (

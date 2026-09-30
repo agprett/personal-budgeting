@@ -181,7 +181,7 @@ function Dashboard () {
                 </div>
               </div>
               <div className={`text-sm font-mono font-medium flex-shrink-0 ml-3 ${tx.type === 'Income' || tx.type === 'Payment' || tx.type === 'Deposit' ? 'text-[#10b981]' : 'text-[#ef4444]'}`}>
-                {tx.type === 'income' ? '+' : '-'}${tx.amount.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                {tx.type === 'income' ? '+' : '-'}${Math.abs(tx.amount).toLocaleString('en-US', { minimumFractionDigits: 2 })}
               </div>
             </div>
           ))}

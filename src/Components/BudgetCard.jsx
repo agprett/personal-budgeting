@@ -74,9 +74,9 @@ function BudgetCard({ budget, remaining, over, color, refreshBudgets, refreshSum
         </div>
       </div>
       {/* Mobile: show spent inline */}
-      <div className="sm:hidden text-xs text-[#3a5070] mb-2">Spent: <span className="text-white font-mono">${actual.toLocaleString()}</span></div>
-      <ProgressBar value={actual} max={budget.amount} color={color} />
-      <div className="mt-1 text-[10px] text-[#3a5070] text-right">{Math.round((actual / budget.amount) * 100)}% used</div>
+      <div className="sm:hidden text-xs text-[#3a5070] mb-2">Spent: <span className="text-white font-mono">${Math.abs(actual).toLocaleString()}</span></div>
+      <ProgressBar value={-actual} max={budget.amount} color={color} />
+      <div className="mt-1 text-[10px] text-[#3a5070] text-right">{-Math.round((actual / budget.amount) * 100)}% used</div>
     </div>
   )
 }
